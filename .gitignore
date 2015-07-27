@@ -1,0 +1,16 @@
+### https://raw.github.com/github/gitignore/4e453133cbaa26d51c350170264cb0bf7b4f0e21/java.gitignore
+
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+*.iml
+.gradle/
+.idea/
+build/

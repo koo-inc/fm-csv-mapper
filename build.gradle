@@ -1,0 +1,46 @@
+group 'jp.co.freemind'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+// 'provided' work around http://forums.gradle.org/gradle/topics/how_do_i_best_define_dependencies_as_provided#reply_6653285
+configurations {
+  provided
+}
+sourceSets {
+  main {
+    compileClasspath += [configurations.provided]
+  }
+}
+idea.module {
+  scopes.PROVIDED.plus += [configurations.provided]
+}
+eclipse.classpath {
+  //you can tweak the classpath of the Eclipse project by adding extra configurations:
+  plusConfigurations += [ configurations.provided ]
+  //if you don't want some classpath entries 'exported' in Eclipse
+  noExportConfigurations += [ configurations.provided ]
+}
+
+dependencies {
+  compile group: 'org.jparsec', name: 'jparsec', version:'2.2.1'
+  def jacksonVersion = '2.6.0-rc4'
+  compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jacksonVersion
+  compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
+  compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+
+  testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.1'
+  testCompile group: 'junit', name: 'junit', version: '4.11'
+  testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
+
+  provided group: 'org.projectlombok', name: 'lombok', version:'1.14.8'
+}
