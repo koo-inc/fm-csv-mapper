@@ -63,25 +63,25 @@ public class CsvFormatter<T> {
       this.formatClass = targetClass;
     }
 
-    public Builder with(Class<?> formatClass) {
+    public Builder<T> with(Class<?> formatClass) {
       this.formatClass = formatClass;
       return this;
     }
 
-    public Builder quoteChar(char quoteChar) {
+    public Builder<T> quoteChar(char quoteChar) {
       this.quoteChar = quoteChar;
       return this;
     }
-    public Builder withoutQuoteChar() {
+    public Builder<T> withoutQuoteChar() {
       this.quoteChar = 0;
       return this;
     }
 
-    public Builder withHeaders() {
+    public Builder<T> withHeaders() {
       this.headerRequired = true;
       return this;
     }
-    public Builder withoutHeader() {
+    public Builder<T> withoutHeader() {
       this.headerRequired = false;
       return this;
     }

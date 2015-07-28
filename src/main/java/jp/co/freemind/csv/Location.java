@@ -1,5 +1,7 @@
 package jp.co.freemind.csv;
 
+import java.util.OptionalInt;
+
 import lombok.Value;
 
 /**
@@ -7,5 +9,5 @@ import lombok.Value;
  */
 @Value public class Location {
   private final int lineNumber;
-  private final int columnNumber;
+  private final OptionalInt columnNumber;
 }
