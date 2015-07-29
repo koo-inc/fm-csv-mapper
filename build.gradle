@@ -55,7 +55,7 @@ publishing {
     mavenJava(MavenPublication) {
       from components.java
       groupId project.group
-      artifactId 'stream-csv-mapper'
+      artifactId 'fm-csv-mapper'
       version currentVersion
     }
   }
@@ -66,10 +66,10 @@ bintray {
   key = bintrayKey
   pkg {
     repo = 'maven'
-    name = 'stream-csv-mapper'
-    userOrg = user//'koo-inc'
+    name = 'fm-csv-mapper'
+    userOrg = 'koo-inc'
     licenses = ['MIT']
-    vcsUrl = 'https://github.com/tasuku-s/stream-csv-mapper.git'
+    vcsUrl = 'https://github.com/koo-inc/fm-csv-mapper.git'
     version {
       name = currentVersion
       desc = 'Stream CSV Mapper 1.0 SNAPSHOT'
