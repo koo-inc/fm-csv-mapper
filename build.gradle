@@ -1,10 +1,15 @@
-group 'jp.co.freemind'
-version '1.0-SNAPSHOT'
+plugins {
+  id 'maven'
+  id 'maven-publish'
+  id 'java'
+  id 'groovy'
+  id 'idea'
+  id 'eclipse'
+  id "com.jfrog.bintray" version "1.2"
+}
 
-apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
+group 'jp.co.freemind'
+version currentVersion
 
 sourceCompatibility = 1.8
 
@@ -43,4 +48,33 @@ dependencies {
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
 
   provided group: 'org.projectlombok', name: 'lombok', version:'1.14.8'
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      groupId project.group
+      artifactId 'stream-csv-mapper'
+      version currentVersion
+    }
+  }
+}
+
+bintray {
+  user = bintrayUser
+  key = bintrayKey
+  pkg {
+    repo = 'maven'
+    name = 'stream-csv-mapper'
+    userOrg = user//'koo-inc'
+    licenses = ['MIT']
+    vcsUrl = 'https://github.com/tasuku-s/stream-csv-mapper.git'
+    version {
+      name = currentVersion
+      desc = 'Stream CSV Mapper 1.0 SNAPSHOT'
+      vcsTag = '1.0-SNAPSHOT'
+    }
+    publications = ['mavenJava']
+  }
 }
