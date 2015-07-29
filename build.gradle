@@ -38,7 +38,8 @@ eclipse.classpath {
 
 dependencies {
   compile group: 'org.jparsec', name: 'jparsec', version:'2.2.1'
-  def jacksonVersion = '2.6.0-rc4'
+
+  def jacksonVersion = '2.6.0'
   compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jacksonVersion
   compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
   compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
