@@ -39,7 +39,7 @@ public class CsvParser<T> {
 
   public CsvParser(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper) {
     this.formatter = csvFormatter;
-    this.objectMapper = objectMapper;
+    this.objectMapper = objectMapper.copy();
   }
 
   public Stream<T> parse(InputStream is) {
@@ -93,8 +93,9 @@ public class CsvParser<T> {
   private Stream<CsvLine> parseToCsvLine(InputStream is) {
     CsvLineParser lineParser = new CsvLineParser(formatter.getQuoteChar(), formatter.getEscapeChar(), formatter.getFieldSeparator());
 
-    AtomicInteger lineNum = new AtomicInteger(1);
-    return parseToLine(is)
+    int skipCount = formatter.withHeader() ? 1 : 0;
+    AtomicInteger lineNum = new AtomicInteger(skipCount + 1);
+    return parseToLine(is).skip(skipCount)
       .map(line -> {
         int i = lineNum.getAndIncrement();
         try {

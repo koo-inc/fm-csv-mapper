@@ -114,4 +114,12 @@ public class CsvSchema {
   private String quote(String str) {
     return "\"" + str.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
   }
+
+  private BeanInfo createBeanInfo(Class<?> targetClass) {
+    try {
+      return Introspector.getBeanInfo(targetClass);
+    } catch (IntrospectionException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
 }

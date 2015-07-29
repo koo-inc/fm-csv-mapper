@@ -16,7 +16,7 @@ public class CsvFormatter<T> {
   public enum LineBreak {
     CR("\r"),
     LF("\n"),
-    CRLF("\r\n")
+    CRLF("\r\n"),
     ;
 
     @Getter private final String value;
@@ -25,7 +25,6 @@ public class CsvFormatter<T> {
 
   private final Class<T> targetClass;
   private final Class<?> formatClass;
-  private final boolean quoteRequired ;
   private final Charset charset;
   private final char fieldSeparator;
   private final LineBreak lineBreak;
@@ -54,8 +53,8 @@ public class CsvFormatter<T> {
     @Setter @Accessors(fluent = true) private char columnSeparator = ',';
     @Setter @Accessors(fluent = true) private LineBreak lineBreak = LineBreak.CRLF;
     @Setter @Accessors(fluent = true) private char escapeChar = '\\';
-    @Setter @Accessors(fluent = true) private String nullValue;
-    private boolean headerRequired = true;
+    @Setter @Accessors(fluent = true) private String nullValue = "";
+    private boolean headerRequired = false;
     private Character quoteChar = '"';
 
     private Builder(Class<T> targetClass) {
@@ -72,10 +71,6 @@ public class CsvFormatter<T> {
       this.quoteChar = quoteChar;
       return this;
     }
-    public Builder<T> withoutQuoteChar() {
-      this.quoteChar = 0;
-      return this;
-    }
 
     public Builder<T> withHeaders() {
       this.headerRequired = true;
@@ -89,7 +84,6 @@ public class CsvFormatter<T> {
     public CsvFormatter<T> build() {
       return new CsvFormatter<>(
         targetClass,formatClass,
-        quoteChar > 0,
         Charset.forName(charset),
         columnSeparator,
         lineBreak, quoteChar, escapeChar, headerRequired, nullValue

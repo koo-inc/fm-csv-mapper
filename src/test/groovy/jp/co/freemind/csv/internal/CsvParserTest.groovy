@@ -1,7 +1,8 @@
-package jp.co.freemind.csv
+package jp.co.freemind.csv.internal
+import jp.co.freemind.csv.CsvFormatter
+import jp.co.freemind.csv.Location
 import jp.co.freemind.csv.data.Sample
 import jp.co.freemind.csv.exception.FieldFormatException
-import jp.co.freemind.csv.internal.CsvParser
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -44,4 +45,20 @@ class CsvParserTest extends Specification {
     assert e.locations == [new Location(1, OptionalInt.of(2)), new Location(1, OptionalInt.of(3))]
     assert parsed == [new Sample(a: "a", b: null, c: null)]
   }
+
+  def "test with headers"() {
+    given:
+    def CsvParser<Sample> parser = new CsvParser<Sample>(CsvFormatter.builder(Sample).with(Sample.CsvFormat).withHeaders().build())
+
+    when:
+    def stream = parser.parse(new ByteArrayInputStream('foo,bar,buz\r\na,a,a'.getBytes("MS932")))
+    def parsed = stream.collect(Collectors.toList())
+    stream.close()
+
+    then:
+    def e = thrown(FieldFormatException)
+    assert e.locations == [new Location(2, OptionalInt.of(2)), new Location(2, OptionalInt.of(3))]
+    assert parsed == [new Sample(a: "a", b: null, c: null)]
+  }
+
 }
