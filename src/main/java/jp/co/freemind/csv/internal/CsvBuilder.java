@@ -40,7 +40,7 @@ public class CsvBuilder<T> {
   }
 
   public Consumer<T> writeTo(OutputStream os) {
-    CsvSchema schema = new CsvSchema(csvFormatter.getFormatClass());
+    CsvSchema schema = new CsvSchema(csvFormatter.getFormatClass(), csvFormatter.getNullValue());
     String[] headers = schema.getHeaders();
     String headerLine = Arrays.stream(headers).map(this::quote).collect(joining(new String(new char[] {csvFormatter.getFieldSeparator()})));
     String separator = new String(new char[] { csvFormatter.getFieldSeparator() });

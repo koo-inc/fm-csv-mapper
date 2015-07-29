@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.Spliterator;
@@ -18,11 +17,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jp.co.freemind.csv.CsvFormatter;
 import jp.co.freemind.csv.Location;
-import jp.co.freemind.csv.exception.FieldFormatException;
 import jp.co.freemind.csv.exception.LineParseException;
 import jp.co.freemind.csv.exception.ReflectiveOperationRuntimeException;
-
-import static java.util.stream.Collectors.toList;
 
 
 /**
@@ -42,47 +38,35 @@ public class CsvParser<T> {
     this.objectMapper = objectMapper.copy();
   }
 
-  public Stream<T> parse(InputStream is) {
-    Set<Location> errorLocation = new LinkedHashSet<>();
-
-    Stream<CsvLine> stream = parseToCsvLine(is);
-    stream.onClose(()-> {
-      if (errorLocation.size() > 0) {
-        throw new FieldFormatException(errorLocation.stream().collect(toList()));
-      }
-    });
-
+  public Stream<T> parse(InputStream is, CsvErrorSniffer context) {
     ObjectMapper mapper = objectMapper.copy();
     mapper.addMixIn(formatter.getTargetClass(), formatter.getFormatClass());
 
     ObjectReader reader = mapper.readerFor(formatter.getTargetClass());
 
-    CsvSchema schema = new CsvSchema(formatter.getFormatClass());
+    CsvSchema schema = new CsvSchema(formatter.getFormatClass(), formatter.getNullValue());
 
-    return stream.map(line -> {
+    return parseToCsvLine(is).map(line -> {
       line.getException().ifPresent(e ->
-        errorLocation.add(new Location(line.getLineNumber(), OptionalInt.empty())));
+        context.mark(new Location(line.getLineNumber(), OptionalInt.empty())));
 
       Set<String> ignoreField = new HashSet<>();
-      while(true) {
+      while (true) {
         try {
           return reader.readValue(schema.toJson(line, ignoreField));
-        }
-        catch (InvalidFormatException e) {
+        } catch (InvalidFormatException e) {
           String fieldName = e.getPath().get(0).getFieldName();
           Location location = new Location(line.getLineNumber(), OptionalInt.of(schema.getColumnNumber(fieldName)));
-          if (errorLocation.contains(location)) {
+          if (context.contains(location)) {
             throw new IllegalStateException("invalid row state: " + e.getLocation());
           }
-          errorLocation.add(location);
+          context.mark(location);
           ignoreField.add(fieldName);
-        }
-        catch (IOException e) {
-          errorLocation.add(new Location(line.getLineNumber(), OptionalInt.empty()));
+        } catch (IOException e) {
+          context.mark(new Location(line.getLineNumber(), OptionalInt.empty()));
           try {
             return formatter.getTargetClass().newInstance();
-          }
-          catch (ReflectiveOperationException e2) {
+          } catch (ReflectiveOperationException e2) {
             throw new ReflectiveOperationRuntimeException(e2);
           }
         }

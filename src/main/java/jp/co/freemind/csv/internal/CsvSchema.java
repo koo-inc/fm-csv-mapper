@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -26,10 +27,12 @@ public class CsvSchema {
 
   @Getter private final Class<?> formatClass;
   @Getter private final String[] headers;
+  private final String nullValue;
 
-  public CsvSchema(Class<?> formatClass) {
+  public CsvSchema(Class<?> formatClass, String nullValue) {
     this.formatClass = formatClass;
     this.headers = createHeaders(formatClass);
+    this.nullValue = nullValue;
   }
 
   public String toJson(CsvLine line, Set<String> ignoreHeader) {
@@ -112,6 +115,9 @@ public class CsvSchema {
   }
 
   private String quote(String str) {
+    if (Objects.equals(str, nullValue)) {
+      return null;
+    }
     return "\"" + str.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
   }
 
