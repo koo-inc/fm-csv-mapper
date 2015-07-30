@@ -134,4 +134,32 @@ class CsvBuilderTest extends Specification {
     assert os.toString("UTF-8") == "'a','1','true'\r\n'あ''ああ',,"
   }
 
+  def "test builder with BOM and utf-8"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).withBom().charset("UTF-8").build()
+    def builder = new CsvBuilder<Sample>(formatter)
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あああ", b: null, c: null))
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '\uFEFF"a","1","true"\r\n"あああ",,'
+  }
+
+  def "test builder with BOM and not uft-8"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).withBom().charset("EUC-JP").build()
+    def builder = new CsvBuilder<Sample>(formatter)
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あああ", b: null, c: null))
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("EUC-JP") == '"a","1","true"\r\n"あああ",,'
+  }
+
 }

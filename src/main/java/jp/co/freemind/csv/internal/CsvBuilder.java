@@ -3,6 +3,7 @@ package jp.co.freemind.csv.internal;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -21,6 +22,7 @@ import static java.util.stream.Collectors.joining;
 public class CsvBuilder<T> {
   private static final ObjectMapper plainMapper = new ObjectMapper();
   private static final TypeReference<Map<String, String>> typeReference = new TypeReference<Map<String, String>>() {};
+  private static final Charset UTF8 = Charset.forName("UTF-8");
   private final CsvFormatter<T> csvFormatter;
   private final ObjectMapper objectMapper;
 
@@ -55,11 +57,18 @@ public class CsvBuilder<T> {
           joiner.add(quote(data.get(header)));
         }
 
-        if (!isFirst.getAndSet(false)) {
-          os.write(lineBreak);
+        if (isFirst.getAndSet(false)) {
+          if (csvFormatter.getCharset().equals(UTF8) && csvFormatter.isBomRequired()) {
+            os.write(0xEF);
+            os.write(0xBB);
+            os.write(0xBF);
+          }
+          if (csvFormatter.isHeaderRequired()) {
+            os.write(headerLine.getBytes(csvFormatter.getCharset()));
+            os.write(lineBreak);
+          }
         }
-        else if (csvFormatter.isHeaderRequired()) {
-          os.write(headerLine.getBytes(csvFormatter.getCharset()));
+        else {
           os.write(lineBreak);
         }
         os.write(joiner.toString().getBytes(csvFormatter.getCharset()));

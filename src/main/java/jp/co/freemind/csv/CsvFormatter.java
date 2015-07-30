@@ -26,6 +26,7 @@ public class CsvFormatter<T> {
   private final Class<T> targetClass;
   private final Class<?> formatClass;
   private final Charset charset;
+  private final boolean bomRequired;
   private final char fieldSeparator;
   private final LineBreak lineBreak;
   private final char quoteChar;
@@ -50,6 +51,7 @@ public class CsvFormatter<T> {
     @Setter @Accessors(fluent = true) private LineBreak lineBreak = LineBreak.CRLF;
     @Setter @Accessors(fluent = true) private char escapeChar = '\\';
     @Setter @Accessors(fluent = true) private String nullValue = "";
+    private boolean withBom = false;
     private boolean headerRequired = false;
     private Character quoteChar = '"';
 
@@ -68,6 +70,15 @@ public class CsvFormatter<T> {
       return this;
     }
 
+    public Builder<T> withBom() {
+      withBom = true;
+      return this;
+    }
+    public Builder<T> withoutBom() {
+      withBom = false;
+      return this;
+    }
+
     public Builder<T> withHeaders() {
       this.headerRequired = true;
       return this;
@@ -80,7 +91,7 @@ public class CsvFormatter<T> {
     public CsvFormatter<T> build() {
       return new CsvFormatter<>(
         targetClass,formatClass,
-        Charset.forName(charset),
+        Charset.forName(charset), withBom,
         columnSeparator,
         lineBreak, quoteChar, escapeChar, headerRequired, nullValue
       );
