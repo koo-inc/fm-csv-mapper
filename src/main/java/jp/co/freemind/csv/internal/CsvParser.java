@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jp.co.freemind.csv.CsvFormatter;
 import jp.co.freemind.csv.Location;
 import jp.co.freemind.csv.exception.LineParseException;
@@ -54,7 +54,7 @@ public class CsvParser<T> {
       while (true) {
         try {
           return reader.readValue(schema.toJson(line, ignoreField));
-        } catch (InvalidFormatException e) {
+        } catch (JsonMappingException e) {
           String fieldName = e.getPath().get(0).getFieldName();
           Location location = new Location(line.getLineNumber(), OptionalInt.of(schema.getColumnNumber(fieldName)));
           if (context.contains(location)) {
