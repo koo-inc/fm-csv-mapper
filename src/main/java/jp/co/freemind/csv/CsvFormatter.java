@@ -33,10 +33,6 @@ public class CsvFormatter<T> {
   private final boolean headerRequired;
   private final String nullValue;
 
-  public boolean withHeader() {
-    return headerRequired;
-  }
-
   public String[] getHeaderFields() {
     return formatClass.getAnnotation(JsonPropertyOrder.class).value();
   }

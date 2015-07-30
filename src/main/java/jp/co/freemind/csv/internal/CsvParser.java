@@ -77,7 +77,7 @@ public class CsvParser<T> {
   private Stream<CsvLine> parseToCsvLine(InputStream is) {
     CsvLineParser lineParser = new CsvLineParser(formatter.getQuoteChar(), formatter.getEscapeChar(), formatter.getFieldSeparator());
 
-    int skipCount = formatter.withHeader() ? 1 : 0;
+    int skipCount = formatter.isHeaderRequired() ? 1 : 0;
     AtomicInteger lineNum = new AtomicInteger(skipCount + 1);
     return parseToLine(is).skip(skipCount)
       .map(line -> {

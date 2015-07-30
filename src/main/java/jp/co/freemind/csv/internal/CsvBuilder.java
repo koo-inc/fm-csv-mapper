@@ -58,7 +58,7 @@ public class CsvBuilder<T> {
         if (!isFirst.getAndSet(false)) {
           os.write(lineBreak);
         }
-        else if (csvFormatter.withHeader()) {
+        else if (csvFormatter.isHeaderRequired()) {
           os.write(headerLine.getBytes(csvFormatter.getCharset()));
           os.write(lineBreak);
         }
