@@ -19,7 +19,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("MS932") == '"a","1","true"\r\n"あ\\"ああ",,'
+    assert os.toString("UTF-8") == '"a","1","true"\r\n"あ\\"ああ",,'
   }
 
   def "test builder with another column separator"() {
@@ -33,7 +33,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("MS932") == '"a"\t"1"\t"true"\r\n"あ\\"ああ"\t\t'
+    assert os.toString("UTF-8") == '"a"\t"1"\t"true"\r\n"あ\\"ああ"\t\t'
   }
 
   def "test builder with another quote char"() {
@@ -66,7 +66,7 @@ class CsvBuilderTest extends Specification {
 
   def "test builder with another charset"() {
     given:
-    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).charset("UTF-8").build()
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).charset("EUC-JP").build()
     def builder = new CsvBuilder<Sample>(formatter)
     def os = new ByteArrayOutputStream()
     def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あああ", b: null, c: null))
@@ -75,7 +75,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("UTF-8") == '"a","1","true"\r\n"あああ",,'
+    assert os.toString("EUC-JP") == '"a","1","true"\r\n"あああ",,'
   }
 
   def "test builder with header"() {
@@ -89,7 +89,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("MS932") == '"foo","bar","buz"\r\n"a","1","true"\r\n"あああ",,'
+    assert os.toString("UTF-8") == '"foo","bar","buz"\r\n"a","1","true"\r\n"あああ",,'
   }
 
   def "test builder with nullValue"() {
@@ -103,7 +103,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("MS932") == '"a","1","true"\r\n"あああ",NULL,NULL'
+    assert os.toString("UTF-8") == '"a","1","true"\r\n"あああ",NULL,NULL'
   }
 
   def "test builder with another escape"() {
@@ -117,7 +117,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("MS932") == '"a","1","true"\r\n"あ""ああ",,'
+    assert os.toString("UTF-8") == '"a","1","true"\r\n"あ""ああ",,'
   }
 
   def "test builder with another escape and another quote"() {
@@ -131,7 +131,7 @@ class CsvBuilderTest extends Specification {
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("MS932") == "'a','1','true'\r\n'あ''ああ',,"
+    assert os.toString("UTF-8") == "'a','1','true'\r\n'あ''ああ',,"
   }
 
 }

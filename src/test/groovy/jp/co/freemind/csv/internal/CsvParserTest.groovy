@@ -16,7 +16,7 @@ class CsvParserTest extends Specification {
   def "test formatter"() {
     when:
     def sniffer = new CsvErrorSniffer()
-    def parsed = parser.parse(new ByteArrayInputStream('a,1,true'.getBytes("MS932")), sniffer).collect(Collectors.toList())
+    def parsed = parser.parse(new ByteArrayInputStream('a,1,true'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
     assert !sniffer.hasError()
@@ -26,7 +26,7 @@ class CsvParserTest extends Specification {
   def "test one error for each lines"() {
     when:
     def sniffer = new CsvErrorSniffer()
-    def stream = parser.parse(new ByteArrayInputStream('a,a,true\nb,1,b'.getBytes("MS932")), sniffer)
+    def stream = parser.parse(new ByteArrayInputStream('a,a,true\nb,1,b'.getBytes("UTF-8")), sniffer)
     def parsed = stream.collect(Collectors.toList())
     stream.close()
 
@@ -39,7 +39,7 @@ class CsvParserTest extends Specification {
   def "test two error on one line"() {
     when:
     def sniffer = new CsvErrorSniffer()
-    def stream = parser.parse(new ByteArrayInputStream('a,a,a'.getBytes("MS932")), sniffer)
+    def stream = parser.parse(new ByteArrayInputStream('a,a,a'.getBytes("UTF-8")), sniffer)
     def parsed = stream.collect(Collectors.toList())
     stream.close()
 
@@ -55,7 +55,7 @@ class CsvParserTest extends Specification {
 
     when:
     def sniffer = new CsvErrorSniffer()
-    def parsed = parser.parse(new ByteArrayInputStream('foo,bar,buz\r\na,a,a'.getBytes("MS932")), sniffer).collect(Collectors.toList())
+    def parsed = parser.parse(new ByteArrayInputStream('foo,bar,buz\r\na,a,a'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
     assert sniffer.locations == [new Location(2, OptionalInt.of(2)), new Location(2, OptionalInt.of(3))] as Set
@@ -69,7 +69,7 @@ class CsvParserTest extends Specification {
 
     when:
     def sniffer = new CsvErrorSniffer()
-    def parsed = parser.parse(new ByteArrayInputStream('NULL,NULL,NULL'.getBytes("MS932")), sniffer).collect(Collectors.toList())
+    def parsed = parser.parse(new ByteArrayInputStream('NULL,NULL,NULL'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
     assert parsed == [new Sample(a: null, b: null, c: null)]

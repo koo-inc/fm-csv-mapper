@@ -18,7 +18,7 @@ class CsvMapperTest extends Specification {
     def reader = mapper.createReader()
 
     when:
-    def data = reader.read(new ByteArrayInputStream('"あああ",1,true\r\n"いいい","ううう","えええ"\r\n,,'.getBytes("MS932"))).collect(Collectors.toList())
+    def data = reader.read(new ByteArrayInputStream('"あああ",1,true\r\n"いいい","ううう","えええ"\r\n,,'.getBytes("UTF-8"))).collect(Collectors.toList())
 
     then:
     assert data == [new Sample(a: "あああ", b: true, c: 1), new Sample(a: "いいい", b: null, c: null), new Sample(a: null, b: null, c: null)]
@@ -35,6 +35,6 @@ class CsvMapperTest extends Specification {
     Stream.of(new Sample(a: "あああ", b: true, c: 1)).forEach(writer.writeTo(os))
 
     then:
-    assert os.toString("MS932") == '"あああ","1","true"'
+    assert os.toString("UTF-8") == '"あああ","1","true"'
   }
 }
