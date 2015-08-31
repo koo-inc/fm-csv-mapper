@@ -5,6 +5,9 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.beans.Transient;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -14,16 +17,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import lombok.Getter;
 
 /**
  * Created by kakusuke on 15/07/28.
  */
 public class CsvSchema {
+  static final private JsonFactory FACTORY = new JsonFactory();
 
   @Getter private final Class<?> formatClass;
   @Getter private final String[] headers;
@@ -36,14 +41,25 @@ public class CsvSchema {
   }
 
   public String toJson(CsvLine line, Set<String> ignoreHeader) {
-    String[] headers = getHeaders();
-    String[] values = line.getFields();
-    StringJoiner joiner = new StringJoiner(",", "{", "}");
-    for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
-      if (ignoreHeader.contains(headers[i])) continue;
-      joiner.add(quote(headers[i]) + ":" + quote(values[i]));
+    try (StringWriter writer = new StringWriter();
+         JsonGenerator generator = FACTORY.createGenerator(writer)) {
+
+      generator.writeStartObject();
+
+      String[] headers = getHeaders();
+      String[] values = line.getFields();
+
+      for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
+        if (ignoreHeader.contains(headers[i])) continue;
+        generator.writeObjectField(headers[i], Objects.equals(values[i], nullValue) ? null : values[i]);
+      }
+      generator.writeEndObject();
+      generator.flush();
+
+      return writer.toString();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
-    return joiner.toString();
   }
 
   public int getColumnNumber(String fieldName) {
@@ -119,13 +135,5 @@ public class CsvSchema {
       return null;
     }
     return "\"" + str.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
-  }
-
-  private BeanInfo createBeanInfo(Class<?> targetClass) {
-    try {
-      return Introspector.getBeanInfo(targetClass);
-    } catch (IntrospectionException e) {
-      throw new IllegalArgumentException(e);
-    }
   }
 }

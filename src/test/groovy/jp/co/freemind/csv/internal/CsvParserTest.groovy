@@ -76,4 +76,17 @@ class CsvParserTest extends Specification {
     assert !sniffer.hasError()
   }
 
+  def "test with linebreaks"() {
+    given:
+    def CsvParser<Sample> parser = new CsvParser<Sample>(CsvFormatter.builder(Sample).with(Sample.CsvFormat).build())
+
+    when:
+    def sniffer = new CsvErrorSniffer()
+    def parsed = parser.parse(new ByteArrayInputStream('"a\na",,\r\n"b\r\nb",,\r\n"c\rc",,'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
+
+    then:
+    assert parsed == [new Sample(a: "a\na", b: null, c:null), new Sample(a: "b\r\nb", b: null, c: null), new Sample(a: "c\rc", b: null, c: null)]
+    assert !sniffer.hasError()
+  }
+
 }
