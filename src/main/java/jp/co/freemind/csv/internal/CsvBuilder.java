@@ -47,7 +47,10 @@ public class CsvBuilder<T> {
     String headerLine = Arrays.stream(headers).map(this::quote).collect(joining(new String(new char[] {csvFormatter.getFieldSeparator()})));
     String separator = new String(new char[] { csvFormatter.getFieldSeparator() });
     byte[] lineBreak = csvFormatter.getLineBreak().getValue().getBytes(csvFormatter.getCharset());
-    AtomicBoolean isFirst = new AtomicBoolean(true);
+
+    setupOutputStream(os, headerLine);
+
+    AtomicBoolean isFirst = new AtomicBoolean(!csvFormatter.isHeaderRequired());
     return t -> {
       try {
         Map<String, String> data = plainMapper.readValue(objectMapper.writeValueAsString(t), typeReference);
@@ -57,18 +60,7 @@ public class CsvBuilder<T> {
           joiner.add(quote(data.get(header)));
         }
 
-        if (isFirst.getAndSet(false)) {
-          if (csvFormatter.getCharset().equals(UTF8) && csvFormatter.isBomRequired()) {
-            os.write(0xEF);
-            os.write(0xBB);
-            os.write(0xBF);
-          }
-          if (csvFormatter.isHeaderRequired()) {
-            os.write(headerLine.getBytes(csvFormatter.getCharset()));
-            os.write(lineBreak);
-          }
-        }
-        else {
+        if (!isFirst.getAndSet(false)) {
           os.write(lineBreak);
         }
         os.write(joiner.toString().getBytes(csvFormatter.getCharset()));
@@ -76,6 +68,21 @@ public class CsvBuilder<T> {
         throw new UncheckedIOException(e);
       }
     };
+  }
+
+  private void setupOutputStream(OutputStream os, String headerLine) {
+    try {
+      if (csvFormatter.getCharset().equals(UTF8) && csvFormatter.isBomRequired()) {
+        os.write(0xEF);
+        os.write(0xBB);
+        os.write(0xBF);
+      }
+      if (csvFormatter.isHeaderRequired()) {
+        os.write(headerLine.getBytes(csvFormatter.getCharset()));
+      }
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   private String quote(String str) {

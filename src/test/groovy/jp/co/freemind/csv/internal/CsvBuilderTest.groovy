@@ -92,6 +92,20 @@ class CsvBuilderTest extends Specification {
     assert os.toString("UTF-8") == '"foo","bar","buz"\r\n"a","1","true"\r\n"あああ",,'
   }
 
+  def "test builder with header and no data"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).withHeaders().build()
+    def builder = new CsvBuilder<Sample>(formatter)
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.empty()
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"foo","bar","buz"'
+  }
+
   def "test builder with nullValue"() {
     given:
     def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).nullValue("NULL").build()
