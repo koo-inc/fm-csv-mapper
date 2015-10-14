@@ -15,6 +15,10 @@ public class CsvWriter<T> {
     this.builder = builder;
   }
 
+  public CsvWriter<T> withHeader(String... headerColumns) {
+    return new CsvWriter<>(builder.withHeader(headerColumns));
+  }
+
   public Consumer<T> writeTo(OutputStream os) {
     return builder.writeTo(os);
   }

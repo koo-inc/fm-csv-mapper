@@ -25,6 +25,7 @@ public class CsvBuilder<T> {
   private static final Charset UTF8 = Charset.forName("UTF-8");
   private final CsvFormatter<T> csvFormatter;
   private final ObjectMapper objectMapper;
+  private final String[] headerFields;
 
   public CsvBuilder(Class<T> targetClass) {
     this(targetClass, targetClass);
@@ -36,15 +37,27 @@ public class CsvBuilder<T> {
     this(csvFormatter, plainMapper);
   }
   public CsvBuilder(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper) {
+    this(csvFormatter, objectMapper, null);
+  }
+  private CsvBuilder(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper, String[] headerFields) {
     this.csvFormatter = csvFormatter;
     this.objectMapper = objectMapper.copy();
     this.objectMapper.addMixIn(csvFormatter.getTargetClass(), csvFormatter.getFormatClass());
+    this.headerFields = headerFields;
+  }
+
+  public CsvBuilder<T> withHeader(String[] headerFields) {
+    return new CsvBuilder<>(csvFormatter.builder().withHeaders().build(), objectMapper, headerFields);
   }
 
   public Consumer<T> writeTo(OutputStream os) {
     CsvSchema schema = new CsvSchema(csvFormatter.getFormatClass(), csvFormatter.getNullValue());
-    String[] headers = schema.getHeaders();
-    String headerLine = Arrays.stream(headers).map(this::quote).collect(joining(new String(new char[] {csvFormatter.getFieldSeparator()})));
+    String[] propertyNames = schema.getPropertyNames();
+
+    String headerLine = Arrays.stream(headerFields != null ? headerFields : propertyNames)
+      .map(this::quote)
+      .collect(joining(new String(new char[]{csvFormatter.getFieldSeparator()})));
+
     String separator = new String(new char[] { csvFormatter.getFieldSeparator() });
     byte[] lineBreak = csvFormatter.getLineBreak().getValue().getBytes(csvFormatter.getCharset());
 
@@ -56,8 +69,8 @@ public class CsvBuilder<T> {
         Map<String, String> data = plainMapper.readValue(objectMapper.writeValueAsString(t), typeReference);
 
         StringJoiner joiner = new StringJoiner(separator);
-        for (String header : headers) {
-          joiner.add(quote(data.get(header)));
+        for (String propertyName : propertyNames) {
+          joiner.add(quote(data.get(propertyName)));
         }
 
         if (!isFirst.getAndSet(false)) {

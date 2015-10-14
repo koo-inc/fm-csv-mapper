@@ -31,12 +31,12 @@ public class CsvSchema {
   static final private JsonFactory FACTORY = new JsonFactory();
 
   @Getter private final Class<?> formatClass;
-  @Getter private final String[] headers;
+  @Getter private final String[] propertyNames;
   private final String nullValue;
 
   public CsvSchema(Class<?> formatClass, String nullValue) {
     this.formatClass = formatClass;
-    this.headers = createHeaders(formatClass);
+    this.propertyNames = createHeaders(formatClass);
     this.nullValue = nullValue;
   }
 
@@ -46,7 +46,7 @@ public class CsvSchema {
 
       generator.writeStartObject();
 
-      String[] headers = getHeaders();
+      String[] headers = getPropertyNames();
       String[] values = line.getFields();
 
       for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
@@ -63,7 +63,7 @@ public class CsvSchema {
   }
 
   public int getColumnNumber(String fieldName) {
-    String[] headers = getHeaders();
+    String[] headers = getPropertyNames();
     for (int i = 0, len = headers.length; i < len; i++) {
       if (headers[i].equals(fieldName)) {
         return i + 1;

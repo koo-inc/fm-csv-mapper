@@ -26,7 +26,7 @@ class CsvMapperTest extends Specification {
     assert reader.errorLocations == [new Location(2, OptionalInt.of(2)), new Location(2, OptionalInt.of(3))] as Set
   }
 
-  def "CreateWriter"() {
+  def "test writer"() {
     given:
     def writer = mapper.createWriter()
 
@@ -36,5 +36,17 @@ class CsvMapperTest extends Specification {
 
     then:
     assert os.toString("UTF-8") == '"あああ","1","true"'
+  }
+
+  def "test writer with header"() {
+    given:
+    def writer = mapper.createWriter().withHeader("hoge","fuga")
+
+    when:
+    def os = new ByteArrayOutputStream()
+    Stream.of(new Sample(a: "あああ", b: true, c: 1)).forEach(writer.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"hoge","fuga"\r\n"あああ","1","true"'
   }
 }

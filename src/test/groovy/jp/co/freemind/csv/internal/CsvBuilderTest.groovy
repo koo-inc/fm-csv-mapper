@@ -92,6 +92,34 @@ class CsvBuilderTest extends Specification {
     assert os.toString("UTF-8") == '"foo","bar","buz"\r\n"a","1","true"\r\n"あああ",,'
   }
 
+  def "test builder with custom header"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).withHeaders().build()
+    def builder = new CsvBuilder<Sample>(formatter).withHeader("hoge", "fuga")
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あああ", b: null, c: null))
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"hoge","fuga"\r\n"a","1","true"\r\n"あああ",,'
+  }
+
+  def "test builder without header and with custom header"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).build()
+    def builder = new CsvBuilder<Sample>(formatter).withHeader("hoge", "fuga")
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あああ", b: null, c: null))
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"hoge","fuga"\r\n"a","1","true"\r\n"あああ",,'
+  }
+
   def "test builder with header and no data"() {
     given:
     def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).withHeaders().build()
@@ -104,6 +132,20 @@ class CsvBuilderTest extends Specification {
 
     then:
     assert os.toString("UTF-8") == '"foo","bar","buz"'
+  }
+
+  def "test builder with custom header and no data"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).withHeaders().build()
+    def builder = new CsvBuilder<Sample>(formatter).withHeader("hoge", "fuga")
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.empty()
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"hoge","fuga"'
   }
 
   def "test builder with nullValue"() {
