@@ -38,12 +38,16 @@ public class CsvFormatter<T> {
     return formatClass.getAnnotation(JsonPropertyOrder.class).value();
   }
 
+  public Builder<T> builder() {
+    return new Builder<>(this);
+  }
+
   public static <T> Builder<T> builder(Class<T> targetClass) {
     return new Builder<>(targetClass);
   }
 
   public static class Builder<T> {
-    private final Class<T> targetClass;
+    private Class<T> targetClass;
     private Class<?> formatClass;
 
     @Setter @Accessors(fluent = true) private String charset = "UTF-8";
@@ -58,6 +62,19 @@ public class CsvFormatter<T> {
     private Builder(Class<T> targetClass) {
       this.targetClass = targetClass;
       this.formatClass = targetClass;
+    }
+
+    public Builder (CsvFormatter<T> formatter) {
+      this.targetClass = formatter.targetClass;
+      this.formatClass = formatter.formatClass;
+      this.charset = formatter.charset.name();
+      this.columnSeparator = formatter.fieldSeparator;
+      this.lineBreak = formatter.lineBreak;
+      this.escapeChar = formatter.escapeChar;
+      this.nullValue = formatter.nullValue;
+      this.withBom = formatter.bomRequired;
+      this.headerRequired = formatter.headerRequired;
+      this.quoteChar = formatter.quoteChar;
     }
 
     public Builder<T> with(Class<?> formatClass) {
