@@ -1,17 +1,5 @@
 package jp.co.freemind.csv.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.HashSet;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -19,6 +7,14 @@ import jp.co.freemind.csv.CsvFormatter;
 import jp.co.freemind.csv.Location;
 import jp.co.freemind.csv.exception.LineParseException;
 import jp.co.freemind.csv.exception.ReflectiveOperationRuntimeException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 
 /**
@@ -40,7 +36,7 @@ public class CsvParser<T> {
 
   public Stream<T> parse(InputStream is, CsvErrorSniffer context) {
     ObjectMapper mapper = objectMapper.copy();
-    mapper.addMixIn(formatter.getTargetClass(), formatter.getFormatClass());
+    formatter.initMixIn(mapper);
 
     ObjectReader reader = mapper.readerFor(formatter.getTargetClass());
 

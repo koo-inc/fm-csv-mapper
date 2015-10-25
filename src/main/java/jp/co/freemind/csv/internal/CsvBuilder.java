@@ -42,8 +42,8 @@ public class CsvBuilder<T> {
   private CsvBuilder(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper, String[] headerFields) {
     this.csvFormatter = csvFormatter;
     this.objectMapper = objectMapper.copy();
-    this.objectMapper.addMixIn(csvFormatter.getTargetClass(), csvFormatter.getFormatClass());
     this.headerFields = headerFields;
+    csvFormatter.initMixIn(this.objectMapper);
   }
 
   public CsvBuilder<T> withHeader(String[] headerFields) {

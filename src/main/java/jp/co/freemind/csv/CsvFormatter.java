@@ -1,18 +1,21 @@
 package jp.co.freemind.csv;
 
-import java.nio.charset.Charset;
-
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jp.co.freemind.csv.internal.MixInCollector;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.Accessors;
+
+import java.nio.charset.Charset;
 
 /**
  * Created by kakusuke on 15/07/20.
  */
 @Value
 public class CsvFormatter<T> {
+
   public enum LineBreak {
     CR("\r"),
     LF("\n"),
@@ -36,6 +39,13 @@ public class CsvFormatter<T> {
 
   public String[] getHeaderFields() {
     return formatClass.getAnnotation(JsonPropertyOrder.class).value();
+  }
+
+  private static final MixInCollector MIX_IN_COLLECTOR = new MixInCollector();
+  public void initMixIn(ObjectMapper objectMapper) {
+    for (MixInCollector.Pair pair : MIX_IN_COLLECTOR.collect(getTargetClass(), getFormatClass())) {
+      objectMapper.addMixIn(pair.getSource(), pair.getMixin());
+    }
   }
 
   public Builder<T> builder() {
