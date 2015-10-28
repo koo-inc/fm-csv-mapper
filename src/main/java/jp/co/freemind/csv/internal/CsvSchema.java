@@ -118,10 +118,14 @@ public class CsvSchema {
       for (PropertyDescriptor descriptor : info.getPropertyDescriptors()) {
         Method read = descriptor.getReadMethod();
         Method write = descriptor.getWriteMethod();
-        if (read.isAnnotationPresent(Transient.class)) continue;
-        if (write.isAnnotationPresent(Transient.class)) continue;
-        if (Modifier.isTransient(read.getModifiers())) continue;
-        if (Modifier.isTransient(write.getModifiers())) continue;
+        if (read != null) {
+          if (read.isAnnotationPresent(Transient.class)) continue;
+          if (Modifier.isTransient(read.getModifiers())) continue;
+        }
+        if (write != null) {
+          if (write.isAnnotationPresent(Transient.class)) continue;
+          if (Modifier.isTransient(write.getModifiers())) continue;
+        }
         set.add(descriptor.getName());
       }
       return set;

@@ -2,6 +2,8 @@ package jp.co.freemind.csv.internal
 
 import jp.co.freemind.csv.CsvFormatter
 import jp.co.freemind.csv.data.Sample
+import jp.co.freemind.csv.data.SampleNestedObject
+import jp.co.freemind.csv.data.SampleWithList
 import spock.lang.Specification
 
 import java.util.stream.Stream
@@ -218,4 +220,36 @@ class CsvBuilderTest extends Specification {
     assert os.toString("EUC-JP") == '"a","1","true"\r\n"あああ",,'
   }
 
+  def "test builder with List<String> field"() {
+    given:
+    def CsvFormatter<SampleWithList> formatter = CsvFormatter.builder(SampleWithList).with(SampleWithList.CsvFormat).build()
+    def builder = new CsvBuilder<SampleWithList>(formatter).orderBy("foo", "buz[0]", "buz[1]", "bar")
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(new SampleWithList(a: "a", b: ["b", "c"], c: 1), new SampleWithList(a: "あ\"ああ", b: [], c: null))
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"a","b","c","1"\r\n"あ\\"ああ",,,'
+  }
+
+  def "test builder with nested object field"() {
+    given:
+    def CsvFormatter<SampleNestedObject> formatter = CsvFormatter.builder(SampleNestedObject).with(SampleNestedObject.CsvFormat).build()
+    def builder = new CsvBuilder<SampleNestedObject>(formatter).orderBy("foo.buz", "bar[0].buz", "bar[1].qux", "foo.qux")
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(
+      new SampleNestedObject(a: new SampleNestedObject.Nested(c: "foo.buz", d: "foo.qux"), b: [
+        new SampleNestedObject.Nested(c: "bar[0].buz", d: "bar[0].qux"),
+        new SampleNestedObject.Nested(c: "bar[1].buz", d: "bar[1].qux")
+      ])
+    )
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == '"foo.buz","bar[0].buz","bar[1].qux","foo.qux"'
+  }
 }
