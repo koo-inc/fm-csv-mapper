@@ -26,7 +26,6 @@ public class CsvBuilder<T> {
   private final CsvFormatter<T> csvFormatter;
   private final ObjectMapper objectMapper;
   private final String[] headerFields;
-  private final String[] orderKeys;
 
   public CsvBuilder(Class<T> targetClass) {
     this(targetClass, targetClass);
@@ -38,21 +37,20 @@ public class CsvBuilder<T> {
     this(csvFormatter, flattenMapper);
   }
   public CsvBuilder(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper) {
-    this(csvFormatter, objectMapper, null, null);
+    this(csvFormatter, objectMapper, null);
   }
-  private CsvBuilder(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper, String[] headerFields, String[] orderKeys) {
+  private CsvBuilder(CsvFormatter<T> csvFormatter, ObjectMapper objectMapper, String[] headerFields) {
     this.csvFormatter = csvFormatter;
     this.objectMapper = objectMapper.copy();
     this.headerFields = headerFields;
-    this.orderKeys = orderKeys;
     csvFormatter.initMixIn(this.objectMapper);
   }
 
   public CsvBuilder<T> withHeader(String[] headerFields) {
-    return new CsvBuilder<>(csvFormatter.builder().withHeaders().build(), objectMapper, headerFields, orderKeys);
+    return new CsvBuilder<>(csvFormatter.builder().withHeaders().build(), objectMapper, headerFields);
   }
   public CsvBuilder<T> orderBy(String... orderPath) {
-    return new CsvBuilder<>(csvFormatter, objectMapper, headerFields, orderPath);
+    return new CsvBuilder<>(csvFormatter.builder().orderBy(orderPath).build(), objectMapper, headerFields);
   }
 
   public Consumer<T> writeTo(OutputStream os) {
@@ -74,9 +72,9 @@ public class CsvBuilder<T> {
         Map<String, String> data = flattenMapper.readValue(objectMapper.writeValueAsBytes(t), typeReference);
 
         StringJoiner joiner = new StringJoiner(separator);
-        String[] orderKeys = this.orderKeys != null ? this.orderKeys : propertyNames;
-        for (String key : orderKeys) {
-          joiner.add(quote(data.get(key)));
+        String[] orderPaths = csvFormatter.getOrderPaths() != null ? csvFormatter.getOrderPaths() : propertyNames;
+        for (String path : orderPaths) {
+          joiner.add(quote(data.get(path)));
         }
 
         if (!isFirst.getAndSet(false)) {

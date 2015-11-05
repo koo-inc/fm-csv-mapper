@@ -1,5 +1,7 @@
 package jp.co.freemind.csv;
 
+import java.nio.charset.Charset;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.co.freemind.csv.internal.MixInCollector;
@@ -7,8 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.Accessors;
-
-import java.nio.charset.Charset;
 
 /**
  * Created by kakusuke on 15/07/20.
@@ -36,6 +36,7 @@ public class CsvFormatter<T> {
   private final char escapeChar;
   private final boolean headerRequired;
   private final String nullValue;
+  private final String[] orderPaths;
 
   public String[] getHeaderFields() {
     return formatClass.getAnnotation(JsonPropertyOrder.class).value();
@@ -68,6 +69,7 @@ public class CsvFormatter<T> {
     private boolean withBom = false;
     private boolean headerRequired = false;
     private Character quoteChar = '"';
+    private String[] orderPaths;
 
     private Builder(Class<T> targetClass) {
       this.targetClass = targetClass;
@@ -114,13 +116,17 @@ public class CsvFormatter<T> {
       this.headerRequired = false;
       return this;
     }
+    public Builder<T> orderBy(String... orderPaths) {
+      this.orderPaths = orderPaths;
+      return this;
+    }
 
     public CsvFormatter<T> build() {
       return new CsvFormatter<>(
         targetClass,formatClass,
         Charset.forName(charset), withBom,
         columnSeparator,
-        lineBreak, quoteChar, escapeChar, headerRequired, nullValue
+        lineBreak, quoteChar, escapeChar, headerRequired, nullValue, orderPaths
       );
     }
   }
