@@ -87,6 +87,7 @@ public class CsvFormatter<T> {
       this.withBom = formatter.bomRequired;
       this.headerRequired = formatter.headerRequired;
       this.quoteChar = formatter.quoteChar;
+      this.orderPaths = formatter.orderPaths;
     }
 
     public Builder<T> with(Class<?> formatClass) {
