@@ -2,6 +2,7 @@ package jp.co.freemind.csv.internal
 import jp.co.freemind.csv.CsvFormatter
 import jp.co.freemind.csv.Location
 import jp.co.freemind.csv.data.Sample
+import jp.co.freemind.csv.data.SampleNestedObject
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -86,6 +87,23 @@ class CsvParserTest extends Specification {
 
     then:
     assert parsed == [new Sample(a: "a\na", b: null, c:null), new Sample(a: "b\r\nb", b: null, c: null), new Sample(a: "c\rc", b: null, c: null)]
+    assert !sniffer.hasError()
+  }
+
+  def "test with orderBy"() {
+    given:
+    def CsvParser<SampleNestedObject> parser = new CsvParser<SampleNestedObject>(CsvFormatter.builder(SampleNestedObject)
+      .orderBy("a.c", "a.d", "b[0].c", "b[0].d", "b[1].c", "b[1].d").build())
+
+    when:
+    def sniffer = new CsvErrorSniffer()
+    def parsed = parser.parse(new ByteArrayInputStream('1,2,3,4,5,6'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
+
+    then:
+    assert parsed == [new SampleNestedObject(
+      a: new SampleNestedObject.Nested(c: '1', d: '2'),
+      b: [new SampleNestedObject.Nested(c: '3', d: '4'), new SampleNestedObject.Nested(c: '5', d: '6')]
+    )]
     assert !sniffer.hasError()
   }
 

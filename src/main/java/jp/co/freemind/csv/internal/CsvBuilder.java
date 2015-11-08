@@ -1,5 +1,9 @@
 package jp.co.freemind.csv.internal;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jp.co.freemind.csv.CsvFormatter;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -9,10 +13,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jp.co.freemind.csv.CsvFormatter;
 
 import static java.util.stream.Collectors.joining;
 
@@ -54,7 +54,7 @@ public class CsvBuilder<T> {
   }
 
   public Consumer<T> writeTo(OutputStream os) {
-    CsvSchema schema = new CsvSchema(csvFormatter.getFormatClass(), csvFormatter.getNullValue());
+    CsvSchema schema = new CsvSchema(csvFormatter);
     String[] propertyNames = schema.getPropertyNames();
 
     String headerLine = Arrays.stream(headerFields != null ? headerFields : propertyNames)

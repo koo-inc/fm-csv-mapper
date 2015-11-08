@@ -11,6 +11,8 @@ public class SampleNestedObject {
   Nested a
   List<Nested> b
 
+  @EqualsAndHashCode
+  @ToString
   static class Nested {
     String c
     String d

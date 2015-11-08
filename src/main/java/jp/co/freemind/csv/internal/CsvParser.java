@@ -40,7 +40,7 @@ public class CsvParser<T> {
 
     ObjectReader reader = mapper.readerFor(formatter.getTargetClass());
 
-    CsvSchema schema = new CsvSchema(formatter.getFormatClass(), formatter.getNullValue());
+    CsvSchema schema = new CsvSchema(formatter);
 
     return parseToCsvLine(is).map(line -> {
       line.getException().ifPresent(e ->

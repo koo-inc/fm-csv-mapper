@@ -1,63 +1,49 @@
 package jp.co.freemind.csv.internal;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.beans.Transient;
-import java.io.IOException;
-import java.io.StringWriter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jp.co.freemind.csv.CsvFormatter;
+import lombok.Getter;
+
+import java.beans.*;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import lombok.Getter;
+import java.util.*;
 
 /**
  * Created by kakusuke on 15/07/28.
  */
 public class CsvSchema {
-  static final private JsonFactory FACTORY = new JsonFactory();
+  static final private ObjectMapper MAPPER = new ObjectMapper().registerModule(new FlattenModule());
 
   @Getter private final Class<?> formatClass;
   @Getter private final String[] propertyNames;
   private final String nullValue;
 
-  public CsvSchema(Class<?> formatClass, String nullValue) {
-    this.formatClass = formatClass;
-    this.propertyNames = createHeaders(formatClass);
-    this.nullValue = nullValue;
+  public <T> CsvSchema(CsvFormatter<T> formatter) {
+    this.formatClass = formatter.getFormatClass();
+    this.propertyNames = formatter.getOrderPaths() != null ? formatter.getOrderPaths() : createHeaders(formatClass);
+    this.nullValue = formatter.getNullValue();
   }
 
   public String toJson(CsvLine line, Set<String> ignoreHeader) {
-    try (StringWriter writer = new StringWriter();
-         JsonGenerator generator = FACTORY.createGenerator(writer)) {
+    Map<String, String> map = new HashMap<>();
 
-      generator.writeStartObject();
+    String[] headers = getPropertyNames();
+    String[] values = line.getFields();
 
-      String[] headers = getPropertyNames();
-      String[] values = line.getFields();
+    for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
+      if (ignoreHeader.contains(headers[i])) continue;
+      map.put(headers[i], Objects.equals(values[i], nullValue) ? null : values[i]);
+    }
 
-      for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
-        if (ignoreHeader.contains(headers[i])) continue;
-        generator.writeObjectField(headers[i], Objects.equals(values[i], nullValue) ? null : values[i]);
-      }
-      generator.writeEndObject();
-      generator.flush();
-
-      return writer.toString();
-    } catch (IOException e) {
+    try {
+      return MAPPER.writeValueAsString(map);
+    } catch (JsonProcessingException e) {
       throw new UncheckedIOException(e);
     }
   }
@@ -134,10 +120,4 @@ public class CsvSchema {
     }
   }
 
-  private String quote(String str) {
-    if (Objects.equals(str, nullValue)) {
-      return null;
-    }
-    return "\"" + str.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
-  }
 }
