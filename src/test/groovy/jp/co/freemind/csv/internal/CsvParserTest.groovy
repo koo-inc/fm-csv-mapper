@@ -107,4 +107,18 @@ class CsvParserTest extends Specification {
     assert !sniffer.hasError()
   }
 
+  def "test with orderBy and nested errors"() {
+    given:
+    def CsvParser<SampleNestedObject> parser = new CsvParser<SampleNestedObject>(CsvFormatter.builder(SampleNestedObject)
+      .orderBy('a.e', 'b[0].e').build())
+
+    when:
+    def sniffer = new CsvErrorSniffer()
+    parser.parse(new ByteArrayInputStream('1,1'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
+
+    then:
+    assert sniffer.locations == [new Location(1, OptionalInt.of(1)), new Location(1, OptionalInt.of(2))] as Set
+    assert sniffer.hasError()
+  }
+
 }

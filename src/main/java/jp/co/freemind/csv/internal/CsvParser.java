@@ -1,5 +1,18 @@
 package jp.co.freemind.csv.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -7,14 +20,6 @@ import jp.co.freemind.csv.CsvFormatter;
 import jp.co.freemind.csv.Location;
 import jp.co.freemind.csv.exception.LineParseException;
 import jp.co.freemind.csv.exception.ReflectiveOperationRuntimeException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 
 /**
@@ -51,13 +56,13 @@ public class CsvParser<T> {
         try {
           return reader.readValue(schema.toJson(line, ignoreField));
         } catch (JsonMappingException e) {
-          String fieldName = e.getPath().get(0).getFieldName();
-          Location location = new Location(line.getLineNumber(), OptionalInt.of(schema.getColumnNumber(fieldName)));
+          String path = buildPath(e.getPath());;
+          Location location = new Location(line.getLineNumber(), OptionalInt.of(schema.getColumnNumber(path)));
           if (context.contains(location)) {
             throw new IllegalStateException("invalid row state: " + e.getLocation());
           }
           context.mark(location);
-          ignoreField.add(fieldName);
+          ignoreField.add(path);
         } catch (IOException e) {
           context.mark(new Location(line.getLineNumber(), OptionalInt.empty()));
           try {
@@ -95,4 +100,24 @@ public class CsvParser<T> {
     RunnableUtil.ThrowingRunnable<IOException> close = scanner::close;
     return StreamSupport.stream(spliterator, false).onClose(close.ignoreThrown(UncheckedIOException::new));
   }
+
+  private String buildPath(List<JsonMappingException.Reference> refs) {
+    StringBuilder sb = new StringBuilder();
+    JsonMappingException.Reference prev = null;
+    for(JsonMappingException.Reference ref : refs) {
+      if (prev != null && ref.getFieldName() != null) {
+        sb.append('.');
+      }
+
+      if (ref.getFieldName() != null) {
+        sb.append(ref.getFieldName());
+      }
+      else {
+        sb.append("[").append(ref.getIndex()).append("]");
+      }
+      prev = ref;
+    }
+    return sb.toString();
+  }
+
 }

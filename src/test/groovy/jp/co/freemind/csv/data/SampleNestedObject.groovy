@@ -16,6 +16,7 @@ public class SampleNestedObject {
   static class Nested {
     String c
     String d
+    boolean e
   }
 
   static class CsvFormat {
