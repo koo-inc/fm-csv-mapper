@@ -1,19 +1,42 @@
 package jp.co.freemind.csv.internal;
 
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.type.*;
+import com.fasterxml.jackson.databind.type.ArrayType;
+import com.fasterxml.jackson.databind.type.CollectionLikeType;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.databind.type.MapLikeType;
+import com.fasterxml.jackson.databind.type.MapType;
 import jp.co.freemind.csv.internal.PathParser.PathSegment;
-
-import java.io.IOException;
-import java.util.*;
 
 
 /**
@@ -162,7 +185,7 @@ class FlattenModule extends Module {
       }
       else {
         int index = Integer.valueOf(segment.getName());
-        expand(((ArrayNode) node), index);
+        expand(((ArrayNode) node), index, JsonNodeType.OBJECT);
         ((ArrayNode) node).set(index, JsonNodeFactory.instance.objectNode());
       }
     }
@@ -173,7 +196,7 @@ class FlattenModule extends Module {
       }
       else {
         int index = Integer.valueOf(segment.getName());
-        expand(((ArrayNode) node), index);
+        expand(((ArrayNode) node), index, JsonNodeType.NULL);
         ((ArrayNode) node).set(index, JsonNodeFactory.instance.textNode(val));
       }
     }
@@ -183,7 +206,9 @@ class FlattenModule extends Module {
         ((ObjectNode) node).putArray(segment.getName());
       }
       else {
-        ((ArrayNode) node).addArray();
+        int index = Integer.valueOf(segment.getName());
+        expand(((ArrayNode) node), index, JsonNodeType.ARRAY);
+        ((ArrayNode) node).set(index, JsonNodeFactory.instance.arrayNode());
       }
     }
 
@@ -197,9 +222,13 @@ class FlattenModule extends Module {
       return node;
     }
 
-    private void expand(ArrayNode node, int index) {
+    private void expand(ArrayNode node, int index, JsonNodeType nodeType) {
       for (int i = node.size(); i <= index; i++) {
-        node.addNull();
+        switch(nodeType) {
+          case ARRAY: node.addArray(); break;
+          case OBJECT: node.addObject(); break;
+          default: node.addNull(); break;
+        }
       }
     }
   }

@@ -17,15 +17,17 @@ class FlattenSerializerTest extends Specification {
     assert convert(inMap) == outMap
 
     where:
-    inMap                                    || outMap
-    [foo: '1', bar: '2']                     || [foo: '1', bar: '2']
-    ['foo.bar': '1']                         || [foo: [bar: '1']]
-    ['foo.bar.buz': '1', 'bar': '2']         || [foo: [bar: [buz: '1']], bar: '2']
-    ['foo[0]': '1', 'foo[1]': '2']           || [foo: ['1', '2']]
-    ['foo[1]': '1']                          || [foo: [null, '1']]
-    ['foo[0].bar': '1', 'foo[1].bar': '2']   || [foo: [[bar: '1'], [bar: '2']]]
-    ['foo[1].bar': null]                     || [foo: [null, [bar: null]]]
-    ['foo[0][0]': '1', 'foo[0][1].bar': '2'] || [foo: [['1', [bar: '2']]]]
+    inMap                                              || outMap
+    [foo: '1', bar: '2']                               || [foo: '1', bar: '2']
+    ['foo.bar': '1']                                   || [foo: [bar: '1']]
+    ['foo.bar.buz': '1', 'bar': '2']                   || [foo: [bar: [buz: '1']], bar: '2']
+    ['foo[0]': '1', 'foo[1]': '2']                     || [foo: ['1', '2']]
+    ['foo[1]': '1']                                    || [foo: [null, '1']]
+    ['foo[0].bar': '1', 'foo[1].bar': '2']             || [foo: [[bar: '1'], [bar: '2']]]
+    ['foo[1].bar': null]                               || [foo: [[:], [bar: null]]]
+    ['foo[0][0]': '1', 'foo[0][1].bar': '2']           || [foo: [['1', [bar: '2']]]]
+    ['foo[1].bar': '1', 'foo[0].bar': '2', 'bar': '3'] || [foo: [[bar: '2'], [bar: '1']], bar: '3']
+    ['foo[1][0]': '1']                                 || [foo: [[], ['1']]]
   }
 
   def convert(value) {
