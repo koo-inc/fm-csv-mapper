@@ -29,13 +29,12 @@ public class CsvLineParser {
     return parser.parse(line);
   }
 
-  private Parser<Void> quote() {
-    return Scanners.isChar(quoteChar);
+  private Parser<List<String>> fields() {
+    return field().sepBy(fieldSeparator());
   }
-  private Parser<Void> quotedString() {
-    String quoteStr = Pattern.quote(String.valueOf(quoteChar));
-    String escapeStr = Pattern.quote(String.valueOf(escapeChar));
-    return Patterns.regex("(" + escapeStr + ".|[^" + quoteStr + escapeStr + "])").many().toScanner("quoted string");
+
+  private Parser<String> field() {
+    return quotedField().or(bareField());
   }
 
   private Parser<String> quotedField() {
@@ -48,8 +47,14 @@ public class CsvLineParser {
     return Patterns.regex("[^" + sepStr + quoteStr + "]*").toScanner("bare field").source();
   }
 
-  private Parser<String> field() {
-    return quotedField().or(bareField());
+  private Parser<Void> quotedString() {
+    String quoteStr = Pattern.quote(String.valueOf(quoteChar));
+    String escapeStr = Pattern.quote(String.valueOf(escapeChar));
+    return Patterns.regex("(" + escapeStr + ".|[^" + quoteStr + escapeStr + "])").many().toScanner("quoted string");
+  }
+
+  private Parser<Void> quote() {
+    return Scanners.isChar(quoteChar);
   }
 
   private Parser<Void> fieldSeparator() {
@@ -57,7 +62,4 @@ public class CsvLineParser {
     return Patterns.regex("\\s*" + sepStr + "\\s*").toScanner("field separator");
   }
 
-  private Parser<List<String>> fields() {
-    return field().sepBy(fieldSeparator());
-  }
 }
