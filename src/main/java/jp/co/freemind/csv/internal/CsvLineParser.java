@@ -1,11 +1,11 @@
 package jp.co.freemind.csv.internal;
 
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.codehaus.jparsec.Parser;
 import org.codehaus.jparsec.Parsers;
-import org.codehaus.jparsec.Scanners;
+import org.codehaus.jparsec.pattern.CharPredicates;
+import org.codehaus.jparsec.pattern.Pattern;
 import org.codehaus.jparsec.pattern.Patterns;
 
 /**
@@ -30,36 +30,53 @@ public class CsvLineParser {
   }
 
   private Parser<List<String>> fields() {
-    return field().sepBy(fieldSeparator());
+    return field().sepBy(fieldSeparator().toScanner("field separator"));
   }
 
   private Parser<String> field() {
-    return quotedField().or(bareField());
+    String esc = java.util.regex.Pattern.quote(String.valueOf(escapeChar));
+    String quot = java.util.regex.Pattern.quote(String.valueOf(quoteChar));
+    return quotedField().map(s -> s.replaceAll(esc + "([" + esc + quot + "])", "$1")).or(bareField());
   }
 
   private Parser<String> quotedField() {
-    return Parsers.between(quote(), quotedString().source(), quote());
+    Parser<Void> quote = quote().toScanner("quote");
+    return Parsers.between(quote, quotedString().source(), quote);
   }
 
   private Parser<String> bareField() {
-    String sepStr = Pattern.quote(String.valueOf(fieldSeparator));
-    String quoteStr = Pattern.quote(String.valueOf(quoteChar));
-    return Patterns.regex("[^" + sepStr + quoteStr + "]*").toScanner("bare field").source();
+    return Patterns.many(
+      CharPredicates.and(
+        CharPredicates.notChar(quoteChar),
+        CharPredicates.notChar(escapeChar),
+        CharPredicates.notChar(fieldSeparator)
+      )
+    ).toScanner("bare field").source();
   }
 
   private Parser<Void> quotedString() {
-    String quoteStr = Pattern.quote(String.valueOf(quoteChar));
-    String escapeStr = Pattern.quote(String.valueOf(escapeChar));
-    return Patterns.regex("(" + escapeStr + ".|[^" + quoteStr + escapeStr + "])").many().toScanner("quoted string");
+    return Patterns.or(
+      Patterns.sequence(escape(), quote()),
+      Patterns.sequence(escape(), escape()),
+      Patterns.many(
+        CharPredicates.and(
+          CharPredicates.notChar(quoteChar),
+          CharPredicates.notChar(escapeChar)
+        )
+      )
+    ).many().toScanner("quoted string");
   }
 
-  private Parser<Void> quote() {
-    return Scanners.isChar(quoteChar);
+  private Pattern quote() {
+    return Patterns.isChar(quoteChar);
   }
 
-  private Parser<Void> fieldSeparator() {
-    String sepStr = Pattern.quote(String.valueOf(fieldSeparator));
-    return Patterns.regex("\\s*" + sepStr + "\\s*").toScanner("field separator");
+  private Pattern escape() {
+    return Patterns.isChar(escapeChar);
+  }
+
+  private Pattern fieldSeparator() {
+    return Patterns.regex("\\s*" + java.util.regex.Pattern.quote(String.valueOf(fieldSeparator)) + "\\s*");
   }
 
 }
