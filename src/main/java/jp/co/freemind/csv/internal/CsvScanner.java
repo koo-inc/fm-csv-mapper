@@ -120,7 +120,7 @@ public class CsvScanner implements AutoCloseable {
     }
 
     void prepareToNextChar() {
-      inEscaped = !inEscaped && current == escapeChar;
+      inEscaped = !inEscaped && current == escapeChar && inQuoted;
       index++;
     }
 
