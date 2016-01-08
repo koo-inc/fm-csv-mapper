@@ -75,19 +75,19 @@ public class CsvScanner implements AutoCloseable {
 
     // nextLine 中のステータス
     int index = 0;
+    int quotedCharIndex = 0;
     boolean inEscaped = false;
-    boolean inQuoted = false;
 
     boolean onQuoteChar() {
       return !inEscaped && current == quoteChar;
     }
 
     boolean onLineBreak() {
-      return !inQuoted && (current == CR || current == LF);
+      return quotedCharIndex == 0 && (current == CR || current == LF);
     }
 
     boolean onLeapLineBreak() {
-      return !inQuoted && prev == CR && current == LF;
+      return quotedCharIndex == 0 && prev == CR && current == LF;
     }
 
     boolean hasBOM() {
@@ -112,7 +112,7 @@ public class CsvScanner implements AutoCloseable {
     }
 
     void flipQuotedState() {
-      inQuoted = !inQuoted;
+      quotedCharIndex = quotedCharIndex > 0 ? 0 : quotedCharIndex + 1;
     }
 
     void pauseForNextLineReading() {
@@ -120,8 +120,11 @@ public class CsvScanner implements AutoCloseable {
     }
 
     void prepareToNextChar() {
-      inEscaped = !inEscaped && current == escapeChar && inQuoted;
+      inEscaped = !inEscaped && current == escapeChar && quotedCharIndex > 1;
       index++;
+      if (quotedCharIndex > 0) {
+        quotedCharIndex++;
+      }
     }
 
     void nextBuffer() throws IOException {

@@ -187,13 +187,13 @@ class CsvScannerTest extends Specification {
 
   def "test nextLine with escaped char as double qoute"() {
     given:
-    def testData = new ByteArrayInputStream('"aa""aa","bbbb"\r\n"aa""aa","bb""bb"'.bytes)
+    def testData = new ByteArrayInputStream('"aa""aa","","bbbb"\r\n"aa""aa","","bb""bb"'.bytes)
     def scanner = new CsvScanner(testData, UTF_8, '"' as char, '"' as char)
 
     expect:
-    assert scanner.nextLine() == '"aa""aa","bbbb"';
+    assert scanner.nextLine() == '"aa""aa","","bbbb"';
     and:
-    assert scanner.nextLine() == '"aa""aa","bb""bb"';
+    assert scanner.nextLine() == '"aa""aa","","bb""bb"';
     and:
     assert scanner.nextLine() == null;
   }
