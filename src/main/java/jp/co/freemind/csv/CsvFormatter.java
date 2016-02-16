@@ -36,6 +36,7 @@ public class CsvFormatter<T> {
   private final char escapeChar;
   private final boolean headerRequired;
   private final String nullValue;
+  private final boolean bareFieldIfPossible;
   private final String[] orderPaths;
 
   public String[] getHeaderFields() {
@@ -66,6 +67,7 @@ public class CsvFormatter<T> {
     @Setter @Accessors(fluent = true) private LineBreak lineBreak = LineBreak.CRLF;
     @Setter @Accessors(fluent = true) private char escapeChar = '\\';
     @Setter @Accessors(fluent = true) private String nullValue = "";
+    @Setter @Accessors(fluent = true) private boolean bareFieldIfPossible = false;
     private boolean withBom = false;
     private boolean headerRequired = false;
     private Character quoteChar = '"';
@@ -84,6 +86,7 @@ public class CsvFormatter<T> {
       this.lineBreak = formatter.lineBreak;
       this.escapeChar = formatter.escapeChar;
       this.nullValue = formatter.nullValue;
+      this.bareFieldIfPossible = formatter.bareFieldIfPossible;
       this.withBom = formatter.bomRequired;
       this.headerRequired = formatter.headerRequired;
       this.quoteChar = formatter.quoteChar;
@@ -127,7 +130,7 @@ public class CsvFormatter<T> {
         targetClass,formatClass,
         Charset.forName(charset), withBom,
         columnSeparator,
-        lineBreak, quoteChar, escapeChar, headerRequired, nullValue, orderPaths
+        lineBreak, quoteChar, escapeChar, headerRequired, nullValue, bareFieldIfPossible, orderPaths
       );
     }
   }

@@ -1,8 +1,6 @@
 package jp.co.freemind.csv.internal;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jp.co.freemind.csv.CsvFormatter;
+import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,7 +12,10 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import static java.util.stream.Collectors.joining;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jp.co.freemind.csv.CsvFormatter;
 
 /**
  * Created by kakusuke on 15/07/28.
@@ -107,14 +108,26 @@ public class CsvBuilder<T> {
     StringBuilder buffer = new StringBuilder();
     String quote = new String(new char[] {csvFormatter.getQuoteChar()});
     String escape = new String(new char[] {csvFormatter.getEscapeChar()});
-    buffer.append(quote);
+    boolean needsQuote = needsQuote(str);
+    if (needsQuote) {
+      buffer.append(quote);
+    }
     str.chars().forEach(c -> {
       if (c == csvFormatter.getEscapeChar() || c == csvFormatter.getQuoteChar()) {
         buffer.append(escape);
       }
       buffer.append((char) c);
     });
-    buffer.append(quote);
+    if (needsQuote) {
+      buffer.append(quote);
+    }
     return buffer.toString();
+  }
+
+  private boolean needsQuote(String str) {
+    if (!csvFormatter.isBareFieldIfPossible()) return true;
+    if (str.indexOf(csvFormatter.getQuoteChar()) > 0) return true;
+    if (str.indexOf(csvFormatter.getEscapeChar()) > 0) return true;
+    return false;
   }
 }

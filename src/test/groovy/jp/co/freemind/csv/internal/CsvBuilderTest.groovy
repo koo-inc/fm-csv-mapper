@@ -252,4 +252,19 @@ class CsvBuilderTest extends Specification {
     then:
     assert os.toString("UTF-8") == '"foo.buz","bar[0].buz","bar[1].qux","foo.qux"'
   }
+
+  def "test builder with bare fields"() {
+    given:
+    def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).bareFieldIfPossible(true).build()
+    def builder = new CsvBuilder<Sample>(formatter)
+    def os = new ByteArrayOutputStream()
+    def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あ\"ああ", b: null, c: null))
+
+    when:
+    stream.forEach(builder.writeTo(os))
+
+    then:
+    assert os.toString("UTF-8") == 'a,1,true\r\n"あ\\"ああ",,'
+  }
+
 }
