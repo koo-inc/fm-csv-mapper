@@ -126,8 +126,13 @@ public class CsvBuilder<T> {
 
   private boolean needsQuote(String str) {
     if (!csvFormatter.isBareFieldIfPossible()) return true;
-    if (str.indexOf(csvFormatter.getQuoteChar()) > 0) return true;
-    if (str.indexOf(csvFormatter.getEscapeChar()) > 0) return true;
+
+    for (int i = 0, len = str.length(); i < len; i++) {
+      char c = str.charAt(i);
+      if (c == csvFormatter.getQuoteChar()) return true;
+      if (c == csvFormatter.getEscapeChar()) return true;
+      if (c == csvFormatter.getFieldSeparator()) return true;
+    }
     return false;
   }
 }

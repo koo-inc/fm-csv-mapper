@@ -258,13 +258,18 @@ class CsvBuilderTest extends Specification {
     def CsvFormatter<Sample> formatter = CsvFormatter.builder(Sample).with(Sample.CsvFormat).bareFieldIfPossible(true).build()
     def builder = new CsvBuilder<Sample>(formatter)
     def os = new ByteArrayOutputStream()
-    def stream = Stream.of(new Sample(a: "a", b: true, c: 1), new Sample(a: "あ\"ああ", b: null, c: null))
+    def stream = Stream.of(
+      new Sample(a: "a", b: true, c: 1),
+      new Sample(a: "あ\"ああ", b: null, c: null),
+      new Sample(a: "あ,あ", b: null, c:null),
+      new Sample(a: "あ\\あ", b: null, c:null)
+    )
 
     when:
     stream.forEach(builder.writeTo(os))
 
     then:
-    assert os.toString("UTF-8") == 'a,1,true\r\n"あ\\"ああ",,'
+    assert os.toString("UTF-8") == 'a,1,true\r\n"あ\\"ああ",,\r\n"あ,あ",,\r\n"あ\\\\あ",,'
   }
 
 }
