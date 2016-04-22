@@ -65,7 +65,7 @@ public class CsvFormatter<T> {
     @Setter @Accessors(fluent = true) private String charset = "UTF-8";
     @Setter @Accessors(fluent = true) private char columnSeparator = ',';
     @Setter @Accessors(fluent = true) private LineBreak lineBreak = LineBreak.CRLF;
-    @Setter @Accessors(fluent = true) private char escapeChar = '\\';
+    @Setter @Accessors(fluent = true) private char escapeChar = '"';
     @Setter @Accessors(fluent = true) private String nullValue = "";
     @Setter @Accessors(fluent = true) private boolean bareFieldIfPossible = false;
     private boolean withBom = false;
