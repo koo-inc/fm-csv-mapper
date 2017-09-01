@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -17,9 +16,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import jp.co.freemind.csv.CsvFormatter;
+import jp.co.freemind.csv.CsvValidator;
 import jp.co.freemind.csv.Location;
 import jp.co.freemind.csv.exception.LineParseException;
 import jp.co.freemind.csv.exception.ReflectiveOperationRuntimeException;
+import jp.co.freemind.csv.exception.ValidationException;
 
 
 /**
@@ -40,6 +41,10 @@ public class CsvParser<T> {
   }
 
   public Stream<T> parse(InputStream is, CsvErrorSniffer context) {
+    return parse(is, context, t -> {});
+  }
+
+  public Stream<T> parse(InputStream is, CsvErrorSniffer context, CsvValidator<T> validator) {
     ObjectMapper mapper = objectMapper.copy();
     formatter.initMixIn(mapper);
 
@@ -49,22 +54,24 @@ public class CsvParser<T> {
 
     return parseToCsvLine(is).map(line -> {
       line.getException().ifPresent(e ->
-        context.mark(new Location(line.getLineNumber(), OptionalInt.empty())));
+        context.mark(new Location(line.getLineNumber(), null, null, formatter.isHeaderRequired())));
 
       Set<String> ignoreField = new HashSet<>();
+      T t;
       while (true) {
         try {
-          return reader.readValue(schema.toJson(line, ignoreField));
+          t =  reader.readValue(schema.toJson(line, ignoreField));
+          break;
         } catch (JsonMappingException e) {
-          String path = buildPath(e.getPath());;
-          Location location = new Location(line.getLineNumber(), OptionalInt.of(schema.getColumnNumber(path)));
+          String path = buildPath(e.getPath());
+          Location location = new Location(line.getLineNumber(), schema.getColumnNumber(path), path, formatter.isHeaderRequired());
           if (context.contains(location)) {
             throw new IllegalStateException("invalid row state: " + e.getLocation());
           }
           context.mark(location);
           ignoreField.add(path);
         } catch (IOException e) {
-          context.mark(new Location(line.getLineNumber(), OptionalInt.empty()));
+          context.mark(new Location(line.getLineNumber(), null, null, formatter.isHeaderRequired()));
           try {
             return formatter.getTargetClass().newInstance();
           } catch (ReflectiveOperationException e2) {
@@ -72,6 +79,16 @@ public class CsvParser<T> {
           }
         }
       }
+
+      try {
+        validator.validate(t);
+      } catch (ValidationException e) {
+        e.getViolation().forEach((path, message) -> {
+          Location location = new Location(line.getLineNumber(), schema.getColumnNumber(path), path, formatter.isHeaderRequired());
+          context.mark(location, message);
+        });
+      }
+      return t;
     });
   }
 

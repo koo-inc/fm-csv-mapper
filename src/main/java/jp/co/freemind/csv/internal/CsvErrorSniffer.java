@@ -1,7 +1,8 @@
 package jp.co.freemind.csv.internal;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import jp.co.freemind.csv.Location;
@@ -10,10 +11,10 @@ import jp.co.freemind.csv.Location;
  * Created by kakusuke on 15/07/29.
  */
 public class CsvErrorSniffer {
-  private Set<Location> locations = new HashSet<>();
+  private Map<Location, String> locations = new HashMap<>();
 
   public boolean contains(Location location) {
-    return locations.contains(location);
+    return locations.containsKey(location);
   }
 
   public boolean hasError() {
@@ -21,10 +22,18 @@ public class CsvErrorSniffer {
   }
 
   public Set<Location> getLocations() {
-    return Collections.unmodifiableSet(locations);
+    return Collections.unmodifiableSet(locations.keySet());
   }
 
   void mark(Location location) {
-    locations.add(location);
+    mark(location, null);
+  }
+
+  void mark(Location location, String message) {
+    locations.putIfAbsent(location, message);
+  }
+
+  public Map<Location, String> getErrors() {
+    return Collections.unmodifiableMap(locations);
   }
 }
