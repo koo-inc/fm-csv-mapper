@@ -32,7 +32,7 @@ class CsvParserTest extends Specification {
     stream.close()
 
     then:
-    assert sniffer.locations == [new Location(1, OptionalInt.of(2)), new Location(2, OptionalInt.of(3))] as Set
+    assert sniffer.locations == [new Location(1, 2, "bar", false), new Location(2, 3, "buz", false)] as Set
     assert sniffer.hasError()
     assert parsed == [new Sample(a: "a", b: true, c: null), new Sample(a: "b", b: null, c: 1)]
   }
@@ -45,7 +45,7 @@ class CsvParserTest extends Specification {
     stream.close()
 
     then:
-    assert sniffer.locations == [new Location(1, OptionalInt.of(2)), new Location(1, OptionalInt.of(3))] as Set
+    assert sniffer.locations == [new Location(1, 2, "bar", false), new Location(1, 3, "buz", false)] as Set
     assert sniffer.hasError()
     assert parsed == [new Sample(a: "a", b: null, c: null)]
   }
@@ -59,7 +59,7 @@ class CsvParserTest extends Specification {
     def parsed = parser.parse(new ByteArrayInputStream('foo,bar,buz\r\na,a,a'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
-    assert sniffer.locations == [new Location(2, OptionalInt.of(2)), new Location(2, OptionalInt.of(3))] as Set
+    assert sniffer.locations == [new Location(2, 2, "bar", false), new Location(2, 3, "buz", false)] as Set
     assert sniffer.hasError()
     assert parsed == [new Sample(a: "a", b: null, c: null)]
   }
@@ -117,7 +117,7 @@ class CsvParserTest extends Specification {
     parser.parse(new ByteArrayInputStream('1,1'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
-    assert sniffer.locations == [new Location(1, OptionalInt.of(1)), new Location(1, OptionalInt.of(2))] as Set
+    assert sniffer.locations == [new Location(1, 1, "a.e", false), new Location(1, 2, "b[0].e", false)] as Set
     assert sniffer.hasError()
   }
 

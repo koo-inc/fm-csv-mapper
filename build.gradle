@@ -52,6 +52,10 @@ dependencies {
   provided group: 'org.projectlombok', name: 'lombok', version:'1.14.8'
 }
 
+task sourceJar(type: Jar) {
+  from sourceSets.main.allSource
+}
+
 publishing {
   publications {
     mavenJava(MavenPublication) {
@@ -59,6 +63,10 @@ publishing {
       groupId project.group
       artifactId 'fm-csv-mapper'
       version currentVersion
+      artifact sourceJar {
+        classifier = 'sources'
+        extension = 'jar'
+      }
     }
   }
 }

@@ -1,20 +1,14 @@
 package jp.co.freemind.csv.internal;
 
-import static java.util.stream.Collectors.joining;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.StringJoiner;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jp.co.freemind.csv.CsvFormatter;
 
 /**
@@ -58,34 +52,41 @@ public class CsvBuilder<T> {
     CsvSchema schema = new CsvSchema(csvFormatter);
     String[] propertyNames = schema.getPropertyNames();
 
-    String headerLine = Arrays.stream(headerFields != null ? headerFields : propertyNames)
-      .map(this::quote)
-      .collect(joining(new String(new char[]{csvFormatter.getFieldSeparator()})));
+    CsvOutputStreamWriter cos = new CsvOutputStreamWriter(os, csvFormatter);
 
-    String separator = new String(new char[] { csvFormatter.getFieldSeparator() });
-    byte[] lineBreak = csvFormatter.getLineBreak().getValue().getBytes(csvFormatter.getCharset());
+    if (csvFormatter.isHeaderRequired()) {
+      try {
+        cos.write(joinHeaders(propertyNames));
+      }
+      catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
 
-    setupOutputStream(os, headerLine);
-
-    AtomicBoolean isFirst = new AtomicBoolean(!csvFormatter.isHeaderRequired());
     return t -> {
       try {
         Map<String, String> data = flattenMapper.readValue(objectMapper.writeValueAsBytes(t), typeReference);
 
-        StringJoiner joiner = new StringJoiner(separator);
+        CsvLineJoiner joiner = new CsvLineJoiner(csvFormatter);
         String[] orderPaths = csvFormatter.getOrderPaths() != null ? csvFormatter.getOrderPaths() : propertyNames;
         for (String path : orderPaths) {
-          joiner.add(quote(data.get(path)));
+          joiner.append(data.get(path));
         }
 
-        if (!isFirst.getAndSet(false)) {
-          os.write(lineBreak);
-        }
-        os.write(joiner.toString().getBytes(csvFormatter.getCharset()));
+        cos.write(joiner.toString());
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
     };
+  }
+
+  private String joinHeaders(String[] propertyNames) {
+    if (propertyNames == null) return "";
+    CsvLineJoiner joiner = new CsvLineJoiner(csvFormatter);
+    for (String headerField : (headerFields != null ? headerFields : propertyNames)) {
+      joiner.append(headerField);
+    }
+    return joiner.toString();
   }
 
   private void setupOutputStream(OutputStream os, String headerLine) {
@@ -101,38 +102,5 @@ public class CsvBuilder<T> {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  private String quote(String str) {
-    if (str == null) return csvFormatter.getNullValue();
-    StringBuilder buffer = new StringBuilder();
-    String quote = new String(new char[] {csvFormatter.getQuoteChar()});
-    String escape = new String(new char[] {csvFormatter.getEscapeChar()});
-    boolean needsQuote = needsQuote(str);
-    if (needsQuote) {
-      buffer.append(quote);
-    }
-    str.chars().forEach(c -> {
-      if (c == csvFormatter.getEscapeChar() || c == csvFormatter.getQuoteChar()) {
-        buffer.append(escape);
-      }
-      buffer.append((char) c);
-    });
-    if (needsQuote) {
-      buffer.append(quote);
-    }
-    return buffer.toString();
-  }
-
-  private boolean needsQuote(String str) {
-    if (!csvFormatter.isBareFieldIfPossible()) return true;
-
-    for (int i = 0, len = str.length(); i < len; i++) {
-      char c = str.charAt(i);
-      if (c == csvFormatter.getQuoteChar()) return true;
-      if (c == csvFormatter.getEscapeChar()) return true;
-      if (c == csvFormatter.getFieldSeparator()) return true;
-    }
-    return false;
   }
 }
