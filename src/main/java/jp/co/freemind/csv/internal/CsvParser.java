@@ -54,7 +54,7 @@ public class CsvParser<T> {
 
     return parseToCsvLine(is).map(line -> {
       line.getException().ifPresent(e ->
-        context.mark(new Location(line.getLineNumber(), null, null, formatter.isHeaderRequired())));
+        context.mark(new Location(line.getLineNumber(), schema.getLineIndex(line.getLineNumber()))));
 
       Set<String> ignoreField = new HashSet<>();
       T t;
@@ -64,14 +64,14 @@ public class CsvParser<T> {
           break;
         } catch (JsonMappingException e) {
           String path = buildPath(e.getPath());
-          Location location = new Location(line.getLineNumber(), schema.getColumnNumber(path), path, formatter.isHeaderRequired());
+          Location location = new Location(line.getLineNumber(), schema.getLineIndex(line.getLineNumber()), schema.getColumnNumber(path), path, schema.getColumnIndex(path));
           if (context.contains(location)) {
             throw new IllegalStateException("invalid row state: " + e.getLocation());
           }
           context.mark(location);
           ignoreField.add(path);
         } catch (IOException e) {
-          context.mark(new Location(line.getLineNumber(), null, null, formatter.isHeaderRequired()));
+          context.mark(new Location(line.getLineNumber(), schema.getLineIndex(line.getLineNumber())));
           try {
             return formatter.getTargetClass().newInstance();
           } catch (ReflectiveOperationException e2) {
@@ -84,7 +84,7 @@ public class CsvParser<T> {
         validator.validate(t);
       } catch (ValidationException e) {
         e.getViolation().forEach((path, message) -> {
-          Location location = new Location(line.getLineNumber(), schema.getColumnNumber(path), path, formatter.isHeaderRequired());
+          Location location = new Location(line.getLineNumber(), schema.getLineIndex(line.getLineNumber()), schema.getColumnNumber(path), path, schema.getColumnIndex(path));
           context.mark(location, message);
         });
       }
@@ -95,7 +95,7 @@ public class CsvParser<T> {
   private Stream<CsvLine> parseToCsvLine(InputStream is) {
     CsvLineParser lineParser = new CsvLineParser(formatter.getQuoteChar(), formatter.getEscapeChar(), formatter.getFieldSeparator());
 
-    int skipCount = formatter.isHeaderRequired() ? 1 : 0;
+    int skipCount = formatter.isHeaderRequired() ? formatter.getSkipLineCount() : 0;
     AtomicInteger lineNum = new AtomicInteger(skipCount + 1);
     return parseToLine(is).skip(skipCount)
       .map(line -> {

@@ -34,7 +34,8 @@ public class CsvFormatter<T> {
   private final LineBreak lineBreak;
   private final char quoteChar;
   private final char escapeChar;
-  private final boolean headerRequired;
+  private final boolean isHeaderRequired;
+  private final int skipLineCount;
   private final String nullValue;
   private final boolean bareFieldIfPossible;
   private final String[] orderPaths;
@@ -69,7 +70,7 @@ public class CsvFormatter<T> {
     @Setter @Accessors(fluent = true) private String nullValue = "";
     @Setter @Accessors(fluent = true) private boolean bareFieldIfPossible = false;
     private boolean withBom = false;
-    private boolean headerRequired = false;
+    private int skipLineCount = 0;
     private Character quoteChar = '"';
     private String[] orderPaths;
 
@@ -88,7 +89,7 @@ public class CsvFormatter<T> {
       this.nullValue = formatter.nullValue;
       this.bareFieldIfPossible = formatter.bareFieldIfPossible;
       this.withBom = formatter.bomRequired;
-      this.headerRequired = formatter.headerRequired;
+      this.skipLineCount = formatter.skipLineCount;
       this.quoteChar = formatter.quoteChar;
       this.orderPaths = formatter.orderPaths;
     }
@@ -113,11 +114,15 @@ public class CsvFormatter<T> {
     }
 
     public Builder<T> withHeaders() {
-      this.headerRequired = true;
+      return withHeaders(1);
+    }
+    public Builder<T> withHeaders(int count) {
+      if (count < 0) throw new IllegalArgumentException("Negative count is not allowed.");
+      this.skipLineCount = count;
       return this;
     }
     public Builder<T> withoutHeader() {
-      this.headerRequired = false;
+      this.skipLineCount = 0;
       return this;
     }
     public Builder<T> orderBy(String... orderPaths) {
@@ -130,7 +135,7 @@ public class CsvFormatter<T> {
         targetClass,formatClass,
         Charset.forName(charset), withBom,
         columnSeparator,
-        lineBreak, quoteChar, escapeChar, headerRequired, nullValue, bareFieldIfPossible, orderPaths
+        lineBreak, quoteChar, escapeChar, skipLineCount > 0, skipLineCount, nullValue, bareFieldIfPossible, orderPaths
       );
     }
   }

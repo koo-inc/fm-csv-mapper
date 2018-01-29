@@ -32,7 +32,7 @@ class CsvParserTest extends Specification {
     stream.close()
 
     then:
-    assert sniffer.locations == [new Location(1, 2, "bar", false), new Location(2, 3, "buz", false)] as Set
+    assert sniffer.locations == [new Location(1, 0, 2, "bar", 1), new Location(2, 1, 3, "buz", 2)] as Set
     assert sniffer.hasError()
     assert parsed == [new Sample(a: "a", b: true, c: null), new Sample(a: "b", b: null, c: 1)]
   }
@@ -45,7 +45,7 @@ class CsvParserTest extends Specification {
     stream.close()
 
     then:
-    assert sniffer.locations == [new Location(1, 2, "bar", false), new Location(1, 3, "buz", false)] as Set
+    assert sniffer.locations == [new Location(1, 0, 2, "bar", 1), new Location(1, 0, 3, "buz", 2)] as Set
     assert sniffer.hasError()
     assert parsed == [new Sample(a: "a", b: null, c: null)]
   }
@@ -59,7 +59,21 @@ class CsvParserTest extends Specification {
     def parsed = parser.parse(new ByteArrayInputStream('foo,bar,buz\r\na,a,a'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
-    assert sniffer.locations == [new Location(2, 2, "bar", false), new Location(2, 3, "buz", false)] as Set
+    assert sniffer.locations == [new Location(2, 0, 2, "bar", 1), new Location(2, 0, 3, "buz", 2)] as Set
+    assert sniffer.hasError()
+    assert parsed == [new Sample(a: "a", b: null, c: null)]
+  }
+
+  def "test with multi line headers"() {
+    given:
+    def CsvParser<Sample> parser = new CsvParser<Sample>(CsvFormatter.builder(Sample).with(Sample.CsvFormat).withHeaders(2).build())
+
+    when:
+    def sniffer = new CsvErrorSniffer()
+    def parsed = parser.parse(new ByteArrayInputStream('foo,bar,buz\r\nfoo,bar,buz\r\na,a,a'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
+
+    then:
+    assert sniffer.locations == [new Location(3, 0, 2, "bar", 1), new Location(3, 0, 3, "buz", 2)] as Set
     assert sniffer.hasError()
     assert parsed == [new Sample(a: "a", b: null, c: null)]
   }
@@ -117,7 +131,7 @@ class CsvParserTest extends Specification {
     parser.parse(new ByteArrayInputStream('1,1'.getBytes("UTF-8")), sniffer).collect(Collectors.toList())
 
     then:
-    assert sniffer.locations == [new Location(1, 1, "a.e", false), new Location(1, 2, "b[0].e", false)] as Set
+    assert sniffer.locations == [new Location(1, 0, 1, "a.e", 0), new Location(1, 0, 2, "b[0].e", 1)] as Set
     assert sniffer.hasError()
   }
 

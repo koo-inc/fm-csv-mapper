@@ -23,7 +23,7 @@ class CsvMapperTest extends Specification {
     then:
     assert data == [new Sample(a: "あああ", b: true, c: 1), new Sample(a: "いいい", b: null, c: null), new Sample(a: null, b: null, c: null)]
     and:
-    assert reader.errorLocations == [new Location(2, 2, "bar", false), new Location(2, 3, "buz", false)] as Set
+    assert reader.errorLocations == [new Location(2, 1, 2, "bar", 1), new Location(2, 1, 3, "buz", 2)] as Set
   }
 
   def "test writer"() {

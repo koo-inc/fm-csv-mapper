@@ -1,18 +1,29 @@
 package jp.co.freemind.csv.internal;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.beans.Transient;
+import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.co.freemind.csv.CsvFormatter;
 import lombok.Getter;
-
-import java.beans.*;
-import java.io.UncheckedIOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.*;
 
 /**
  * Created by kakusuke on 15/07/28.
@@ -23,11 +34,13 @@ public class CsvSchema {
   @Getter private final Class<?> formatClass;
   @Getter private final String[] propertyNames;
   private final String nullValue;
+  private final int skipLineCount;
 
   public <T> CsvSchema(CsvFormatter<T> formatter) {
     this.formatClass = formatter.getFormatClass();
     this.propertyNames = formatter.getOrderPaths() != null ? formatter.getOrderPaths() : createHeaders(formatClass);
     this.nullValue = formatter.getNullValue();
+    this.skipLineCount = formatter.getSkipLineCount();
   }
 
   public String toJson(CsvLine line, Set<String> ignoreHeader) {
@@ -56,6 +69,15 @@ public class CsvSchema {
       }
     }
     return -1;
+  }
+
+  public int getColumnIndex(String fieldName) {
+    int columnNumber = getColumnNumber(fieldName);
+    return columnNumber > 0 ? columnNumber - 1 : -1;
+  }
+
+  public int getLineIndex(int lineNumber) {
+    return lineNumber - (this.skipLineCount + 1);
   }
 
   private String[] createHeaders(Class<?> formatClass) {
