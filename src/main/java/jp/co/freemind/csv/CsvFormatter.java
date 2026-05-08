@@ -31,6 +31,7 @@ public class CsvFormatter<T> {
   private final Charset charset;
   private final boolean bomRequired;
   private final char fieldSeparator;
+  private final boolean ignoreSurroundingSpaces;
   private final LineBreak lineBreak;
   private final char quoteChar;
   private final char escapeChar;
@@ -65,6 +66,7 @@ public class CsvFormatter<T> {
 
     @Setter @Accessors(fluent = true) private String charset = "UTF-8";
     @Setter @Accessors(fluent = true) private char columnSeparator = ',';
+    @Setter @Accessors(fluent = true) private boolean ignoreSurroundingSpaces = true;
     @Setter @Accessors(fluent = true) private LineBreak lineBreak = LineBreak.CRLF;
     @Setter @Accessors(fluent = true) private char escapeChar = '"';
     @Setter @Accessors(fluent = true) private String nullValue = "";
@@ -84,6 +86,7 @@ public class CsvFormatter<T> {
       this.formatClass = formatter.formatClass;
       this.charset = formatter.charset.name();
       this.columnSeparator = formatter.fieldSeparator;
+      this.ignoreSurroundingSpaces = formatter.ignoreSurroundingSpaces;
       this.lineBreak = formatter.lineBreak;
       this.escapeChar = formatter.escapeChar;
       this.nullValue = formatter.nullValue;
@@ -135,6 +138,7 @@ public class CsvFormatter<T> {
         targetClass,formatClass,
         Charset.forName(charset), withBom,
         columnSeparator,
+        ignoreSurroundingSpaces,
         lineBreak, quoteChar, escapeChar, skipLineCount > 0, skipLineCount, nullValue, bareFieldIfPossible, orderPaths
       );
     }

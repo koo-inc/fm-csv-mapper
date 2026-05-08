@@ -16,11 +16,16 @@ public class CsvLineParser {
   private final char quoteChar;
   private final char escapeChar;
   private final char fieldSeparator;
+  private final boolean ignoreSarroundingSpaces;
 
   public CsvLineParser(char quoteChar, char escapeChar, char fieldSeparator) {
+    this(quoteChar, escapeChar, fieldSeparator, true);
+  }
+  public CsvLineParser(char quoteChar, char escapeChar, char fieldSeparator, boolean ignoreSarroundingSpaces) {
     this.quoteChar = quoteChar;
     this.escapeChar = escapeChar;
     this.fieldSeparator = fieldSeparator;
+    this.ignoreSarroundingSpaces = ignoreSarroundingSpaces;
 
     this.parser = fields();
   }
@@ -76,7 +81,11 @@ public class CsvLineParser {
   }
 
   private Pattern fieldSeparator() {
-    return Patterns.regex("\\s*" + java.util.regex.Pattern.quote(String.valueOf(fieldSeparator)) + "\\s*");
+    if (this.ignoreSarroundingSpaces) {
+      return Patterns.regex("\\s*" + java.util.regex.Pattern.quote(String.valueOf(fieldSeparator)) + "\\s*");
+    } else {
+      return Patterns.isChar(fieldSeparator);
+    }
   }
 
 }

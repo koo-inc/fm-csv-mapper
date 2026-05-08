@@ -111,4 +111,19 @@ class CsvLineParserTest extends Specification {
     '"""",""""""'    | ['"', '""']
   }
 
+  def "test parse line without trim spaces"() {
+    given:
+    def parser = new CsvLineParser('"' as char, '\\' as char, ',' as char, false)
+
+    when:
+    def actual = parser.parse(line)
+    then:
+    assert actual == expected
+
+    where:
+    line              | expected
+    '  aaa  '         | ["  aaa  "]
+    '  aaa  ,  bbb  ' | ["  aaa  ", "  bbb  "]
+  }
+
 }

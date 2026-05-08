@@ -5,7 +5,6 @@ plugins {
   id 'groovy'
   id 'idea'
   id 'eclipse'
-  id "com.jfrog.bintray" version "1.2"
 }
 
 group 'jp.co.freemind'
@@ -68,23 +67,5 @@ publishing {
         extension = 'jar'
       }
     }
-  }
-}
-
-bintray {
-  user = bintrayUser
-  key = bintrayKey
-  pkg {
-    repo = 'maven'
-    name = 'fm-csv-mapper'
-    userOrg = 'koo-inc'
-    licenses = ['MIT']
-    vcsUrl = 'https://github.com/koo-inc/fm-csv-mapper.git'
-    version {
-      name = currentVersion
-      desc = 'Stream CSV Mapper 1.0 SNAPSHOT'
-      vcsTag = '1.0-SNAPSHOT'
-    }
-    publications = ['mavenJava']
   }
 }
